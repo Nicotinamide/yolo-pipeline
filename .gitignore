@@ -1,0 +1,35 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# uv
+uv.lock
+
+# Project artifacts (not tracked in git)
+runs/
+logs/
+datasets/
+.cache/
+
+# Pretrained weights (download via weights/download.sh)
+weights/*.pt
+
+# 测试用的本地资源（按需修改）
+/best_v*.pt
+/*.png
+/*.jpg
+/*.mp4
+
+# 工具/IDE 元数据
+.agents/
+.codex/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

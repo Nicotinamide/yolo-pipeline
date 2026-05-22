@@ -1,0 +1,40 @@
+[project]
+name = "yolo-video-demo"
+version = "0.1.0"
+description = "Config-driven YOLO detection & segmentation training pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+
+# 核心依赖——不含 torch（Jetson/CUDA 版本需按平台安装，见下方说明）
+dependencies = [
+    "ultralytics>=8.4",
+    "opencv-python>=4.6",
+    "numpy>=1.24",
+    "pyyaml>=5.4",
+    "pillow>=9.0",
+    "matplotlib>=3.5",
+    "scipy>=1.8",
+]
+
+[project.optional-dependencies]
+# Jetson Orin (aarch64, CUDA 12.6) — 从 NVIDIA PyPI 安装 torch
+jetson = [
+    "torch>=2.11",
+]
+# x86_64 CUDA 12 桌面/服务器
+cuda12 = [
+    "torch>=2.4",
+]
+# CPU-only（开发/测试用）
+cpu = [
+    "torch>=2.4",
+]
+
+[tool.uv]
+# Jetson aarch64 用户需要 NVIDIA 的 PyTorch index，安装时加参数：
+# uv pip install -e ".[jetson]" --extra-index-url https://pypi.jetson-ai-lab.com/jp6/cu126
+# 非 Jetson 用户无需额外配置。
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
