@@ -38,3 +38,9 @@ cpu = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# 这是一个脚本/应用项目，不是 Python 包。
+# 但 uv pip install -e 需要 hatchling 知道打包什么——指向 pipeline/ 即可。
+# tools/ 不在这里：它们通过 sys.path 自行定位，不需要被"安装"。
+[tool.hatch.build.targets.wheel]
+packages = ["pipeline"]
