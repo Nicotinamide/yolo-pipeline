@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from project_env import ROOT, ensure_project_env
+from pipeline.config import detect_default_device
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,7 +25,7 @@ def parse_args() -> argparse.Namespace:
                         choices=["engine", "onnx", "torchscript", "openvino", "ncnn"],
                         help="导出格式 (默认 engine=TensorRT)")
     parser.add_argument("--imgsz", type=int, default=960, help="导出分辨率")
-    parser.add_argument("--device", default="0", help="导出设备")
+    parser.add_argument("--device", default=None, help="导出设备（默认自动检测 GPU/CPU）")
     parser.add_argument("--no-half", action="store_true", help="禁用 FP16 (默认开启半精度)")
     parser.add_argument("--dynamic", action="store_true", help="动态 batch size (ONNX)")
     parser.add_argument("--simplify", action="store_true", help="简化 ONNX 图")
@@ -42,12 +43,14 @@ def main() -> None:
     if not model_path.exists():
         sys.exit(f"模型不存在: {model_path}")
 
+    device = args.device if args.device is not None else detect_default_device()
+
     model = YOLO(str(model_path))
 
     export_args = {
         "format": args.format,
         "imgsz": args.imgsz,
-        "device": args.device,
+        "device": device,
         "half": not args.no_half,
     }
     if args.format == "onnx":

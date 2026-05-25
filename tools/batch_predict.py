@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from project_env import ROOT, ensure_project_env
+from pipeline.config import detect_default_device
 
 
 def parse_args() -> argparse.Namespace:
@@ -23,7 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source", required=True, help="图片目录")
     parser.add_argument("--imgsz", type=int, default=960, help="推理分辨率")
     parser.add_argument("--conf", type=float, default=0.25, help="置信度阈值")
-    parser.add_argument("--device", default="0", help="推理设备")
+    parser.add_argument("--device", default=None, help="推理设备（默认自动检测 GPU/CPU）")
     parser.add_argument("--save", action="store_true", help="保存带标注的结果图片")
     parser.add_argument("--save-txt", action="store_true", help="保存 YOLO txt 预测")
     return parser.parse_args()
@@ -40,6 +41,8 @@ def main() -> None:
     if not model_path.exists():
         sys.exit(f"模型不存在: {model_path}")
 
+    device = args.device if args.device is not None else detect_default_device()
+
     source = args.source
     if not Path(source).is_absolute():
         candidate = ROOT / source
@@ -51,7 +54,7 @@ def main() -> None:
         source=source,
         imgsz=args.imgsz,
         conf=args.conf,
-        device=args.device,
+        device=device,
         project=str(ROOT / "runs"),
         name=f"batch_{model_path.stem}",
         save=args.save,

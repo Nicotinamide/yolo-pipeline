@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from project_env import ROOT, ensure_project_env
+from pipeline.config import detect_default_device
 
 
 DEFAULT_SIZES = [640, 960, 1280, 1920]
@@ -26,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sizes", nargs="*", type=int, default=DEFAULT_SIZES,
                         help=f"要测试的 imgsz 列表 (默认 {DEFAULT_SIZES})")
     parser.add_argument("--conf", type=float, default=0.25, help="置信度阈值")
-    parser.add_argument("--device", default="0", help="推理设备")
+    parser.add_argument("--device", default=None, help="推理设备（默认自动检测 GPU/CPU）")
     return parser.parse_args()
 
 
@@ -40,6 +41,8 @@ def main() -> None:
         model_path = ROOT / model_path
     if not model_path.exists():
         sys.exit(f"模型不存在: {model_path}")
+
+    device = args.device if args.device is not None else detect_default_device()
 
     source = args.source
     if not Path(source).is_absolute():
@@ -60,7 +63,7 @@ def main() -> None:
             source=source,
             imgsz=sz,
             conf=args.conf,
-            device=args.device,
+            device=device,
             project=str(ROOT / "runs"),
             name=f"imgsz_{model_path.stem}_{sz}",
             save=True,

@@ -16,6 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from project_env import ROOT, ensure_project_env
+from pipeline.config import detect_default_device
 
 
 def parse_args() -> argparse.Namespace:
@@ -25,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source", required=True, help="测试图片/视频路径")
     parser.add_argument("--imgsz", type=int, default=960, help="推理分辨率")
     parser.add_argument("--conf", type=float, default=0.25, help="置信度阈值")
-    parser.add_argument("--device", default="0", help="推理设备")
+    parser.add_argument("--device", default=None, help="推理设备（默认自动检测 GPU/CPU）")
     return parser.parse_args()
 
 
@@ -62,6 +63,8 @@ def main() -> None:
     if not models:
         sys.exit("未找到任何模型文件。用 --models 指定路径或 glob 模式。")
 
+    device = args.device if args.device is not None else detect_default_device()
+
     source = args.source
     if not Path(source).is_absolute():
         candidate = ROOT / source
@@ -79,7 +82,7 @@ def main() -> None:
             source=source,
             imgsz=args.imgsz,
             conf=args.conf,
-            device=args.device,
+            device=device,
             project=str(ROOT / "runs"),
             name=f"compare_{model_path.stem}",
             save=True,

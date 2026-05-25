@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from project_env import ROOT, ensure_project_env
+from pipeline.config import detect_default_device
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,7 +25,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--imgsz", type=int, default=960, help="推理分辨率 (默认 960)")
     parser.add_argument("--conf", type=float, default=0.25, help="置信度阈值 (默认 0.25)")
     parser.add_argument("--iou", type=float, default=0.7, help="NMS IoU 阈值 (默认 0.7)")
-    parser.add_argument("--device", default="0", help="推理设备: 0=GPU, cpu=CPU")
+    parser.add_argument("--device", default=None, help="推理设备: 0=GPU, cpu=CPU（默认自动检测）")
     parser.add_argument("--name", default=None, help="输出目录名 (默认按模型名生成)")
     parser.add_argument("--show", action="store_true", help="弹窗显示结果")
     parser.add_argument("--save-txt", action="store_true", help="保存 YOLO txt 标签")
@@ -45,6 +46,8 @@ def main() -> None:
     if not model_path.exists():
         sys.exit(f"模型不存在: {model_path}")
 
+    device = args.device if args.device is not None else detect_default_device()
+
     source = args.source
     if source.isdigit():
         source = int(source)
@@ -61,7 +64,7 @@ def main() -> None:
         imgsz=args.imgsz,
         conf=args.conf,
         iou=args.iou,
-        device=args.device,
+        device=device,
         project=str(ROOT / "runs"),
         name=run_name,
         save=not args.no_save,

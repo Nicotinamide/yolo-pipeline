@@ -73,8 +73,9 @@ EPOCHS=150
 如果项目里没有预训练权重，先下载：
 
 ```bash
-bash weights/download.sh                              # 默认下载 yolo26n.pt
-bash weights/download.sh yolo26s.pt yolo26n-seg.pt    # 指定下载
+bash weights/download.sh                              # 交互菜单（选系列/任务/规模）
+bash weights/download.sh yolo26n.pt                   # 直接指定权重
+bash weights/download.sh yolo26s.pt yolo26n-seg.pt    # 多个权重
 ```
 
 跑：
@@ -192,7 +193,7 @@ python tools/export_model.py --model best.pt --format engine --imgsz 960
 
 ```bash
 python tools/train.py --images /path/to/imgs --labels /path/to/lbls \
-    --task segment --pretrained yolo26s.pt --epochs 200 --imgsz 1280 --batch 4
+    --task segment --pretrained weights/yolo26s.pt --epochs 200 --imgsz 1280 --batch 4
 
 # 续训
 python tools/train.py --images /path/to/imgs --labels /path/to/lbls \
@@ -200,6 +201,12 @@ python tools/train.py --images /path/to/imgs --labels /path/to/lbls \
 
 # 已有 YOLO 数据集（含 data.yaml），跳过 prepare
 python tools/train.py --data datasets/my_data/data.yaml --name my_run
+
+# 只准备数据集，不训练
+python tools/train.py --images ... --labels ... --prepare-only
+
+# 训练完不跑 val 集预测
+python tools/train.py --images ... --labels ... --no-predict
 
 # 只看解析后的配置，不实际跑
 python tools/train.py --images ... --labels ... --dry-run
@@ -209,7 +216,7 @@ python tools/train.py --images ... --labels ... --dry-run
 
 ```python
 from ultralytics import YOLO
-model = YOLO("yolo26n.pt")
+model = YOLO("weights/yolo26n.pt")
 model.train(data="datasets/my_run/data.yaml", epochs=200, mosaic=1.0, mixup=0.3, cos_lr=True)
 ```
 
