@@ -49,9 +49,15 @@ def ensure_project_env() -> None:
         os.environ.setdefault("CUDA_HOME", str(cuda_home))
         ld_paths: list[str] = []
 
-        cuda_aarch64_lib = cuda_home / "targets/aarch64-linux/lib"
-        if cuda_aarch64_lib.is_dir():
-            ld_paths.append(str(cuda_aarch64_lib))
+        # 按架构选 CUDA 目标库：aarch64 (Jetson) 或 x86_64
+        import platform
+        arch = platform.machine()
+        arch_to_subdir = {"aarch64": "aarch64-linux", "x86_64": "x86_64-linux"}
+        arch_subdir = arch_to_subdir.get(arch)
+        if arch_subdir:
+            cuda_arch_lib = cuda_home / f"targets/{arch_subdir}/lib"
+            if cuda_arch_lib.is_dir():
+                ld_paths.append(str(cuda_arch_lib))
 
         cuda_lib64 = cuda_home / "lib64"
         if cuda_lib64.is_dir():

@@ -2,6 +2,18 @@
 
 配置驱动的 YOLO 检测/分割训练流水线。给定图片目录和 YOLO 格式标签，自动完成数据集准备、训练、验证集预测。
 
+## 系统支持
+
+| 平台 | 状态 | 说明 |
+|------|------|------|
+| Jetson Orin (aarch64) | ✅ | 默认推荐 |
+| Linux x86_64 + NVIDIA GPU | ✅ | 推荐用于服务器/工作站 |
+| Linux x86_64 + CPU | ✅ | 仅供调试，训练慢 |
+| macOS (Apple Silicon) | ⚠️ | 仅 CPU 模式，没测过 MPS |
+| Windows | ⚠️ | 没测过，env.sh 需要 WSL 或 Git Bash |
+
+要求：Python 3.10+，可选 CUDA 11.8 / 12.x。
+
 ## 快速开始
 
 ### 1. 安装环境（推荐 uv）
@@ -16,16 +28,19 @@ uv venv --python 3.10
 source .venv/bin/activate
 ```
 
-按平台选择安装方式：
+按平台选择 PyTorch：
 
 ```bash
-# Jetson Orin (aarch64, CUDA 12.6)
+# Jetson Orin (aarch64, JetPack 6, CUDA 12.6)
 uv pip install -e ".[jetson]" --extra-index-url https://pypi.jetson-ai-lab.com/jp6/cu126
 
-# x86_64 + CUDA 12
+# x86_64 + CUDA 12.x（桌面/服务器）
 uv pip install -e ".[cuda12]" --extra-index-url https://download.pytorch.org/whl/cu124
 
-# 仅 CPU（开发/测试）
+# x86_64 + CUDA 11.8
+uv pip install -e ".[cuda12]" --extra-index-url https://download.pytorch.org/whl/cu118
+
+# 仅 CPU（调试用）
 uv pip install -e ".[cpu]" --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
@@ -33,8 +48,14 @@ uv pip install -e ".[cpu]" --extra-index-url https://download.pytorch.org/whl/cp
 
 ```bash
 conda create -n yolo python=3.10 -y && conda activate yolo
-pip install -e "."
+# x86_64 GPU
+pip install -e "." && pip install torch --index-url https://download.pytorch.org/whl/cu124
+# Jetson
+pip install -e "." && pip install torch --index-url https://pypi.jetson-ai-lab.com/jp6/cu126
 ```
+
+> **跨平台说明**：`env.sh` 和 `project_env.py` 会自动检测 `aarch64` / `x86_64` 架构，
+> 并加载对应的 CUDA 库目录。无 CUDA 也能正常运行（跳过 GPU 初始化，使用 CPU）。
 
 ### 2. 训练
 
@@ -52,8 +73,8 @@ EPOCHS=150
 如果项目里没有预训练权重，先下载：
 
 ```bash
-bash weights/download.sh          # 默认下载 yolov8n + yolo11n
-bash weights/download.sh yolov8s.pt yolo11n-seg.pt    # 指定下载
+bash weights/download.sh                              # 默认下载 yolo26n.pt
+bash weights/download.sh yolo26s.pt yolo26n-seg.pt    # 指定下载
 ```
 
 跑：
@@ -78,7 +99,7 @@ runs/<NAME>_predict/              # val 集预测可视化
 
 ```bash
 cp train.sh train_v8.sh
-# 编辑 train_v8.sh：PRETRAINED="yolo8n.pt", NAME="my_run_v8"
+# 编辑 train_v8.sh：PRETRAINED="weights/yolov8n.pt", NAME="my_run_v8"
 bash train_v8.sh
 ```
 
