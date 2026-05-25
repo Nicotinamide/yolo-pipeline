@@ -23,7 +23,7 @@
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 克隆项目并创建虚拟环境
-git clone <repo-url> && cd yolo_video_demo
+git clone <repo-url> && cd yolo-pipeline
 uv venv --python 3.10
 source .venv/bin/activate
 ```
@@ -118,7 +118,7 @@ RESUME="runs/my_run/weights/last.pt"
 ## 项目结构
 
 ```
-yolo_video_demo/
+yolo-pipeline/
 ├── env.sh                  # 自动检测项目根目录、CUDA、venv
 ├── train.sh                # 主训练脚本（改配置→运行）
 ├── pyproject.toml          # uv/pip/conda 依赖声明

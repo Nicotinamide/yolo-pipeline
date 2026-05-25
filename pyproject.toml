@@ -1,5 +1,5 @@
 [project]
-name = "yolo-video-demo"
+name = "yolo-pipeline"
 version = "0.1.0"
 description = "Config-driven YOLO detection & segmentation training pipeline"
 readme = "README.md"
