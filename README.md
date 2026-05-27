@@ -23,7 +23,8 @@
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 克隆项目并创建虚拟环境
-git clone <repo-url> && cd yolo-pipeline
+git clone https://github.com/Nicotinamide/yolo-pipeline.git
+cd yolo-pipeline
 uv venv --python 3.10
 source .venv/bin/activate
 ```
