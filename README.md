@@ -16,8 +16,9 @@
 
 ## 安装
 
-推荐直接使用项目脚本。脚本会自动检测 Jetson / x86 CUDA / CPU，先安装平台匹配的
-PyTorch，再安装通用依赖，避免 `ultralytics` 从默认 PyPI 拉到不兼容的 torch wheel。
+推荐用 `install.sh`。脚本会先安装平台对应的 PyTorch，再安装 `requirements.txt`。
+这个顺序不要反过来：`ultralytics` 依赖 `torch/torchvision`，先装通用依赖可能会从
+默认 PyPI 拉到不适合 Jetson 的 wheel。
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -31,20 +32,21 @@ source env.sh
 常用安装参数：
 
 ```bash
-bash install.sh --jetson           # 强制 Jetson
-bash install.sh --cuda12           # x86_64 CUDA 12
-bash install.sh --cuda118          # x86_64 CUDA 11.8
-bash install.sh --cpu              # CPU
+bash install.sh                    # 自动检测平台
+bash install.sh --jetson           # Jetson / JetPack 6 / CUDA 12.6
+bash install.sh --cuda12           # x86_64 + CUDA 12.x
+bash install.sh --cuda118          # x86_64 + CUDA 11.8
+bash install.sh --cpu              # 只装 CPU 版 torch
 bash install.sh --offline          # 只使用 uv 缓存
-bash install.sh --skip-torch       # 只安装通用依赖
+bash install.sh --skip-torch       # 不安装 torch
 ```
 
-`uv` 会缓存下载过的 wheel。第一次下载 Jetson torch 可能较慢，后续删除 `.venv`
-重装会直接复用 `~/.cache/uv`，通常很快。
+Jetson 的 torch wheel 比较大，第一次下载会慢。`uv` 会缓存 wheel，之后删除 `.venv`
+再执行 `bash install.sh` 时会直接复用 `~/.cache/uv`。
 
 ### 手动安装
 
-手动安装时也要先装平台匹配的 PyTorch，再装通用依赖。
+手动安装时同样先装 PyTorch。
 
 ```bash
 uv venv --python 3.10
@@ -70,10 +72,11 @@ uv pip install torch torchvision --index https://download.pytorch.org/whl/cpu --
 安装通用依赖：
 
 ```bash
+# Jetson: 固定 torch/torchvision，并限制 numpy<2，避免 PyTorch wheel 的 NumPy ABI 警告
 printf "torch==2.8.0\ntorchvision==0.23.0\nnumpy<2.0\n" > /tmp/yolo-torch-constraints.txt
 uv pip install -c /tmp/yolo-torch-constraints.txt -r requirements.txt
 
-# 非 Jetson 可直接安装
+# x86_64 / CPU
 uv pip install -r requirements.txt
 ```
 
@@ -81,13 +84,17 @@ uv pip install -r requirements.txt
 
 ```bash
 conda create -n yolo python=3.10 -y && conda activate yolo
-# 先按上面的平台命令安装 torch / torchvision，再安装:
+# 先按上面的平台命令安装 torch / torchvision
+
+# Jetson
 pip install -r requirements.txt -c /tmp/yolo-torch-constraints.txt
+
+# x86_64 / CPU
+pip install -r requirements.txt
 ```
 
-> **跨平台说明**：Jetson 使用系统 CUDA/L4T 库，`numpy` 约束为 `<2.0` 以兼容当前
-> Jetson PyTorch wheel。`env.sh` 和 `project_env.py` 会自动检测 `aarch64` / `x86_64` 架构，
-> 并加载对应的 CUDA 库目录。无 CUDA 也能正常运行（跳过 GPU 初始化，使用 CPU）。
+Jetson 使用系统 CUDA/L4T 库，不使用 x86 PyTorch wheel 自带的 CUDA pip 库。
+`env.sh` 和 `project_env.py` 会按架构加载 CUDA 库目录；没有 CUDA 时会走 CPU。
 
 ## 训练
 
