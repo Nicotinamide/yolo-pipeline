@@ -39,7 +39,26 @@ while [[ $# -gt 0 ]]; do
         --skip-torch)    SKIP_TORCH=1; shift ;;
         --offline)       OFFLINE=1; shift ;;
         --torch-wheel)   TORCH_WHEEL="$2"; shift 2 ;;
-        --help|-h)       grep "^#" "$0" | head -25; exit 0 ;;
+        --help|-h)
+            cat <<EOF
+YOLO Pipeline 一键安装
+
+用法:
+  bash install.sh                    # 自动检测平台并安装
+  bash install.sh --jetson           # 强制 Jetson
+  bash install.sh --cuda12           # 强制 x86_64 CUDA 12
+  bash install.sh --cuda118          # 强制 x86_64 CUDA 11.8
+  bash install.sh --cpu              # 强制 CPU
+  bash install.sh --skip-torch       # 只装通用依赖，不装 torch
+  bash install.sh --torch-wheel PATH # 用本地 torch wheel
+  bash install.sh --offline          # 完全离线安装（所有包都从 cache）
+
+网络不好怎么办:
+  1. 先在能联网的机器上跑一遍 install.sh，让 uv cache 缓存好
+  2. 把 ~/.cache/uv 复制到目标机器同样位置
+  3. 在目标机器跑 bash install.sh --offline
+EOF
+            exit 0 ;;
         *)               echo "未知参数: $1"; exit 1 ;;
     esac
 done
