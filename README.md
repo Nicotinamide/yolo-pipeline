@@ -28,30 +28,34 @@ uv venv --python 3.10
 source .venv/bin/activate
 ```
 
-按平台选择 PyTorch：
+安装通用依赖：
+
+```bash
+uv pip install -r requirements.txt
+```
+
+PyTorch 不在 `requirements.txt` 里，因为不同平台来源不同。按平台再加装：
 
 ```bash
 # Jetson Orin (aarch64, JetPack 6, CUDA 12.6)
-uv pip install -e ".[jetson]" --extra-index-url https://pypi.jetson-ai-lab.com/jp6/cu126
+uv pip install torch --extra-index-url https://pypi.jetson-ai-lab.com/jp6/cu126
 
 # x86_64 + CUDA 12.x（桌面/服务器）
-uv pip install -e ".[cuda12]" --extra-index-url https://download.pytorch.org/whl/cu124
+uv pip install torch --extra-index-url https://download.pytorch.org/whl/cu124
 
 # x86_64 + CUDA 11.8
-uv pip install -e ".[cuda12]" --extra-index-url https://download.pytorch.org/whl/cu118
+uv pip install torch --extra-index-url https://download.pytorch.org/whl/cu118
 
 # 仅 CPU（调试用）
-uv pip install -e ".[cpu]" --extra-index-url https://download.pytorch.org/whl/cpu
+uv pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
 备选 conda：
 
 ```bash
 conda create -n yolo python=3.10 -y && conda activate yolo
-# x86_64 GPU
-pip install -e "." && pip install torch --index-url https://download.pytorch.org/whl/cu124
-# Jetson
-pip install -e "." && pip install torch --index-url https://pypi.jetson-ai-lab.com/jp6/cu126
+pip install -r requirements.txt
+# 然后用上面的命令装 torch
 ```
 
 > **跨平台说明**：`env.sh` 和 `project_env.py` 会自动检测 `aarch64` / `x86_64` 架构，
@@ -122,7 +126,7 @@ RESUME="runs/my_run/weights/last.pt"
 yolo-pipeline/
 ├── env.sh                  # 自动检测项目根目录、CUDA、venv
 ├── train.sh                # 主训练脚本（改配置→运行）
-├── pyproject.toml          # uv/pip/conda 依赖声明
+├── requirements.txt        # Python 依赖（不含 torch，按平台另装）
 ├── weights/                # 预训练权重
 │   ├── download.sh         # 一键下载常用权重
 │   └── *.pt                # YOLO 预训练权重
