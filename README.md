@@ -14,55 +14,82 @@
 
 要求：Python 3.10+，可选 CUDA 11.8 / 12.x。
 
-## 快速开始
+## 安装
 
-### 1. 安装环境（推荐 uv）
+推荐直接使用项目脚本。脚本会自动检测 Jetson / x86 CUDA / CPU，先安装平台匹配的
+PyTorch，再安装通用依赖，避免 `ultralytics` 从默认 PyPI 拉到不兼容的 torch wheel。
 
 ```bash
-# 安装 uv（如果还没装）
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 克隆项目并创建虚拟环境
 git clone https://github.com/Nicotinamide/yolo-pipeline.git
 cd yolo-pipeline
+bash install.sh
+source env.sh
+```
+
+常用安装参数：
+
+```bash
+bash install.sh --jetson           # 强制 Jetson
+bash install.sh --cuda12           # x86_64 CUDA 12
+bash install.sh --cuda118          # x86_64 CUDA 11.8
+bash install.sh --cpu              # CPU
+bash install.sh --offline          # 只使用 uv 缓存
+bash install.sh --skip-torch       # 只安装通用依赖
+```
+
+`uv` 会缓存下载过的 wheel。第一次下载 Jetson torch 可能较慢，后续删除 `.venv`
+重装会直接复用 `~/.cache/uv`，通常很快。
+
+### 手动安装
+
+手动安装时也要先装平台匹配的 PyTorch，再装通用依赖。
+
+```bash
 uv venv --python 3.10
 source .venv/bin/activate
+```
+
+按平台安装 PyTorch：
+
+```bash
+# Jetson Orin (aarch64, JetPack 6, CUDA 12.6)
+uv pip install torch==2.8.0 torchvision==0.23.0 --index https://pypi.jetson-ai-lab.io/jp6/cu126 --index-strategy first-index
+
+# x86_64 + CUDA 12.x（桌面/服务器）
+uv pip install torch torchvision --index https://download.pytorch.org/whl/cu124 --index-strategy first-index
+
+# x86_64 + CUDA 11.8
+uv pip install torch torchvision --index https://download.pytorch.org/whl/cu118 --index-strategy first-index
+
+# 仅 CPU（调试用）
+uv pip install torch torchvision --index https://download.pytorch.org/whl/cpu --index-strategy first-index
 ```
 
 安装通用依赖：
 
 ```bash
+printf "torch==2.8.0\ntorchvision==0.23.0\nnumpy<2.0\n" > /tmp/yolo-torch-constraints.txt
+uv pip install -c /tmp/yolo-torch-constraints.txt -r requirements.txt
+
+# 非 Jetson 可直接安装
 uv pip install -r requirements.txt
-```
-
-PyTorch 不在 `requirements.txt` 里，因为不同平台来源不同。按平台再加装：
-
-```bash
-# Jetson Orin (aarch64, JetPack 6, CUDA 12.6)
-uv pip install torch --extra-index-url https://pypi.jetson-ai-lab.com/jp6/cu126
-
-# x86_64 + CUDA 12.x（桌面/服务器）
-uv pip install torch --extra-index-url https://download.pytorch.org/whl/cu124
-
-# x86_64 + CUDA 11.8
-uv pip install torch --extra-index-url https://download.pytorch.org/whl/cu118
-
-# 仅 CPU（调试用）
-uv pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
 备选 conda：
 
 ```bash
 conda create -n yolo python=3.10 -y && conda activate yolo
-pip install -r requirements.txt
-# 然后用上面的命令装 torch
+# 先按上面的平台命令安装 torch / torchvision，再安装:
+pip install -r requirements.txt -c /tmp/yolo-torch-constraints.txt
 ```
 
-> **跨平台说明**：`env.sh` 和 `project_env.py` 会自动检测 `aarch64` / `x86_64` 架构，
+> **跨平台说明**：Jetson 使用系统 CUDA/L4T 库，`numpy` 约束为 `<2.0` 以兼容当前
+> Jetson PyTorch wheel。`env.sh` 和 `project_env.py` 会自动检测 `aarch64` / `x86_64` 架构，
 > 并加载对应的 CUDA 库目录。无 CUDA 也能正常运行（跳过 GPU 初始化，使用 CPU）。
 
-### 2. 训练
+## 训练
 
 打开 `train.sh`，改顶部 5 个变量：
 
@@ -99,7 +126,7 @@ runs/<NAME>/weights/best.pt       # 最优模型
 runs/<NAME>_predict/              # val 集预测可视化
 ```
 
-### 3. 对比实验
+## 对比实验
 
 复制 `train.sh`，改变量再跑：
 
@@ -113,7 +140,7 @@ bash train_v8.sh
 
 或者打开 `KEEP_HISTORY=1`，每次训练自动加时间戳，永远不覆盖。
 
-### 4. 续训
+## 续训
 
 训练中断后，把 `train.sh` 顶部的 `RESUME` 设为 last.pt 路径再跑：
 
@@ -125,6 +152,7 @@ RESUME="runs/my_run/weights/last.pt"
 
 ```
 yolo-pipeline/
+├── install.sh              # 自动检测平台并安装依赖
 ├── env.sh                  # 自动检测项目根目录、CUDA、venv
 ├── train.sh                # 主训练脚本（改配置→运行）
 ├── requirements.txt        # Python 依赖（不含 torch，按平台另装）

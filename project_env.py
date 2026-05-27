@@ -63,9 +63,12 @@ def ensure_project_env() -> None:
         if cuda_lib64.is_dir():
             ld_paths.append(str(cuda_lib64))
 
-        nvidia_venv_lib = _detect_nvidia_venv_lib()
-        if nvidia_venv_lib and nvidia_venv_lib.is_dir():
-            ld_paths.append(str(nvidia_venv_lib))
+        # x86 PyTorch wheels ship CUDA libs in site-packages/nvidia.  Jetson
+        # uses system CUDA/L4T libraries, so ignore stale pip CUDA libs there.
+        if arch == "x86_64":
+            nvidia_venv_lib = _detect_nvidia_venv_lib()
+            if nvidia_venv_lib and nvidia_venv_lib.is_dir():
+                ld_paths.append(str(nvidia_venv_lib))
 
         current_ld = os.environ.get("LD_LIBRARY_PATH", "")
         current_parts = [part for part in current_ld.split(":") if part]

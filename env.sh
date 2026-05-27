@@ -33,10 +33,13 @@ if [[ -n "${CUDA_HOME:-}" ]]; then
     esac
     [[ -d "$CUDA_HOME/lib64" ]] && _CUDA_LIBS="${_CUDA_LIBS:+$_CUDA_LIBS:}$CUDA_HOME/lib64"
 
-    # 检测 venv 中的 nvidia 库（不绑定具体 Python 版本）
-    _NVIDIA_LIB="$(find "$VIRTUAL_ENV/lib" -path '*/nvidia/cu*/lib' -type d 2>/dev/null | head -1)"
-    if [[ -n "$_NVIDIA_LIB" ]]; then
-        _CUDA_LIBS="${_CUDA_LIBS:+$_CUDA_LIBS:}$_NVIDIA_LIB"
+    # x86 PyTorch wheels ship CUDA libs in site-packages/nvidia.  Jetson uses
+    # system CUDA/L4T libraries, so avoid loading stale pip CUDA libs there.
+    if [[ "$_ARCH" == "x86_64" ]]; then
+        _NVIDIA_LIB="$(find "$VIRTUAL_ENV/lib" -path '*/nvidia/cu*/lib' -type d 2>/dev/null | head -1)"
+        if [[ -n "$_NVIDIA_LIB" ]]; then
+            _CUDA_LIBS="${_CUDA_LIBS:+$_CUDA_LIBS:}$_NVIDIA_LIB"
+        fi
     fi
 
     if [[ -n "$_CUDA_LIBS" ]]; then

@@ -1,6 +1,6 @@
 opencv-python>=4.6
 ultralytics>=8.4
-numpy>=1.24
+numpy>=1.24,<2.0
 pyyaml>=5.4
 pillow>=9.0
 matplotlib>=3.5
